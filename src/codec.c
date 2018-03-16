@@ -75,7 +75,7 @@ static int codec_md5_encode(lua_State *L)
   size_t len;
   const char *cs = luaL_checklstring(L, 1, &len);
   unsigned char bs[16];
-  char dst[32];
+  char dst[32+1]; //多申请一个字节，防止sprintf越界（在lua5.2中发现的确有异常）
   
   MD5((unsigned char *)cs, len, bs);
   
@@ -108,7 +108,7 @@ static int codec_hmac_sha1_encode(lua_State *L)
   HMAC(evp, key, klen, (unsigned char *)cs, len, bs, &n);
   
   int hexn = n * 2, i;
-  char dst[hexn];
+  char dst[hexn+1]; //多申请一个字节，防止sprintf越界
   for(i = 0; i < n; i++)
     sprintf(dst + i * 2, "%02x", bs[i]);
 
