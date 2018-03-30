@@ -1,3 +1,4 @@
+#mingw下编译命令 gcc -I$(LUA_INCLUDE_DIR) -fPIC -Wall -O2 -shared -o codec.dll codec.c lua52.dll -lcrypto
 LUA_VERSION = 5.2
 
 CFLAGS  += `pkg-config --cflags lua$(LUA_VERSION)` -Wall -O2 -shared -fPIC
