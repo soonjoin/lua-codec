@@ -132,13 +132,13 @@ static int codec_aes_encrypt(lua_State *L)
   const char *src = luaL_checklstring(L, 1, &len);
   const char *key = luaL_checkstring(L, 2);
 
-  EVP_CIPHER_CTX ctx;
-  EVP_CIPHER_CTX_init(&ctx);
+  EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+  EVP_CIPHER_CTX_init(ctx);
 
-  int ret = EVP_EncryptInit_ex(&ctx, EVP_aes_128_ecb(), NULL, (unsigned char *)key, NULL);
+  int ret = EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, (unsigned char *)key, NULL);
   if(ret != 1)
   {
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    EVP_CIPHER_CTX_cleanup(ctx);
     return luaL_error(L, "EVP encrypt init error");
   }
 
@@ -146,21 +146,21 @@ static int codec_aes_encrypt(lua_State *L)
   char dst[dstn];
   memset(dst, 0, dstn);
 
-  ret = EVP_EncryptUpdate(&ctx, (unsigned char *)dst, &wn, (unsigned char *)src, len);
+  ret = EVP_EncryptUpdate(ctx, (unsigned char *)dst, &wn, (unsigned char *)src, len);
   if(ret != 1)
   {
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    EVP_CIPHER_CTX_cleanup(ctx);
     return luaL_error(L, "EVP encrypt update error");
   }
   n = wn;
 
-  ret = EVP_EncryptFinal_ex(&ctx, (unsigned char *)(dst + n), &wn);
+  ret = EVP_EncryptFinal_ex(ctx, (unsigned char *)(dst + n), &wn);
   if(ret != 1)
   {
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    EVP_CIPHER_CTX_cleanup(ctx);
     return luaL_error(L, "EVP encrypt final error");
   }
-  EVP_CIPHER_CTX_cleanup(&ctx);
+  EVP_CIPHER_CTX_cleanup(ctx);
   n += wn;
 
   lua_pushlstring(L, dst, n);
@@ -183,13 +183,13 @@ static int codec_aes_decrypt(lua_State *L)
   const char *src = luaL_checklstring(L, 1, &len);
   const char *key = luaL_checkstring(L, 2);
 
-  EVP_CIPHER_CTX ctx;
-  EVP_CIPHER_CTX_init(&ctx);
+  EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+  EVP_CIPHER_CTX_init(ctx);
 
-  int ret = EVP_DecryptInit_ex(&ctx, EVP_aes_128_ecb(), NULL, (unsigned char *)key, NULL);
+  int ret = EVP_DecryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, (unsigned char *)key, NULL);
   if(ret != 1)
   {
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    EVP_CIPHER_CTX_cleanup(ctx);
     return luaL_error(L, "EVP decrypt init error");
   }
 
@@ -197,21 +197,21 @@ static int codec_aes_decrypt(lua_State *L)
   char dst[len];
   memset(dst, 0, len);
 
-  ret = EVP_DecryptUpdate(&ctx, (unsigned char *)dst, &wn, (unsigned char *)src, len);
+  ret = EVP_DecryptUpdate(ctx, (unsigned char *)dst, &wn, (unsigned char *)src, len);
   if(ret != 1)
   {
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    EVP_CIPHER_CTX_cleanup(ctx);
     return luaL_error(L, "EVP decrypt update error");
   }
   n = wn;
 
-  ret = EVP_DecryptFinal_ex(&ctx, (unsigned char *)(dst + n), &wn);
+  ret = EVP_DecryptFinal_ex(ctx, (unsigned char *)(dst + n), &wn);
   if(ret != 1)
   {
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    EVP_CIPHER_CTX_cleanup(ctx);
     return luaL_error(L, "EVP decrypt final error");
   }
-  EVP_CIPHER_CTX_cleanup(&ctx);
+  EVP_CIPHER_CTX_cleanup(ctx);
   n += wn;
 
   lua_pushlstring(L, dst, n);
@@ -237,7 +237,7 @@ static int codec_rsa_private_sign(lua_State *L)
   SHA_CTX c;
   unsigned char sha[SHA_DIGEST_LENGTH];
   memset(sha, 0, SHA_DIGEST_LENGTH);
-  if(SHA_Init(&c) != 1)
+  if(SHA1_Init(&c) != 1)
   {
     OPENSSL_cleanse(&c, sizeof(c));
     return luaL_error(L, "SHA init error");
@@ -304,13 +304,13 @@ static int codec_rsa_public_verify(lua_State *L)
   const char *src = luaL_checklstring(L, 1, &srclen);
   const char *sign = luaL_checklstring(L, 2, &signlen);
   const char *pem = luaL_checkstring(L, 3);
-  int type = luaL_checkint(L, 4);
+  int type = luaL_checkinteger(L, 4);
 
   SHA_CTX ctx;
   int ctxlen = sizeof(ctx);
   unsigned char sha[SHA_DIGEST_LENGTH];
   memset(sha, 0, SHA_DIGEST_LENGTH);
-  if(SHA_Init(&ctx) != 1)
+  if(SHA1_Init(&ctx) != 1)
   {
     OPENSSL_cleanse(&ctx, ctxlen);
     return luaL_error(L, "SHA init error");
@@ -364,7 +364,7 @@ static int codec_rsa_public_encrypt(lua_State *L)
   size_t len;
   const char *src = luaL_checklstring(L, 1, &len);
   const char *pem = luaL_checkstring(L, 2);
-  int type = luaL_checkint(L, 3);
+  int type = luaL_checkinteger(L, 3);
 
   BIO *bio = BIO_new_mem_buf((void *)pem, -1);
   if(bio == NULL)
